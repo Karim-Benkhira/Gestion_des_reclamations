@@ -68,7 +68,7 @@ void singUp()
 
     printf("Inscription réussie !\n");
 }
-/*teeeeeeeeeeeeeeeeeeeeeest
+/***************************teeeeeeeeeeeeeeeeeeeeeest**********************
 int main()
 {
     singUp();
