@@ -1,1 +1,2 @@
 admin AdminPass123! Administrateur 0 0
+Karim Amin@12345 Client 0 0
