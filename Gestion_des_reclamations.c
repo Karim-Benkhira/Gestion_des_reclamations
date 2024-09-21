@@ -7,7 +7,7 @@
 #define MAX_USERNAME 50
 #define MAX_PASSSWD 50
 #define MIN_PASSWD 8
-#define MAX_ATTEMPTS 3
+#define MAX_ATTEMPTS 5
 #define ROLE_SIZE 20
 #define LOCK_TIME 900 
 
@@ -19,6 +19,19 @@ typedef struct {
     int attempts;
     time_t lock_time; 
 } User;
+
+/*=================== Functions =======> 1 =====================*/
+int PasswdValidOrInvalid(const char *passwd, const char *username);
+void signUp();
+int signIn(char *currentRole);
+void addUser();
+void manageRoles(const char *currentRole);
+void changeUserRole();
+void deleteUser();
+void displayUsers();
+int hasPermission(const char *currentRole, const char *requiredRole);
+
+/*=================== Functions =======> 1 =====================*/
 
 int PasswdValidOrInvalid(const char *passwd, const char *username) {
     int P_Upper = 0, P_Lower = 0, P_Digit = 0, P_Special = 0;
@@ -49,23 +62,17 @@ void signUp() {
     printf("Entrez votre mot de passe : ");
     scanf("%s", Passwd);
     
-    do {
-        printf("Entrez votre rôle (Agent, Client) : ");
-        scanf("%s", Role);
-        if (strcmp(Role, "Agent") != 0 && strcmp(Role, "Client") != 0) {
-            printf("Rôle invalide. Veuillez entrer 'Agent' ou 'Client'.\n");
-        }
-    } while (strcmp(Role, "Agent") != 0 && strcmp(Role, "Client") != 0);
-
     if (!PasswdValidOrInvalid(Passwd, UserName)) {
         printf("Mot de passe invalide. Veuillez réessayer.\n");
         return;
     }
 
+    
     file = fopen("users.txt", "r");
     if (file != NULL) {
         User tempUser;
-        while (fscanf(file, "%s %s %s %ld %d", tempUser.username, tempUser.password, tempUser.role, &tempUser.lock_time, &tempUser.attempts) != EOF) {
+        char tempPasswd[MAX_PASSSWD];
+        while (fscanf(file, "%s %s %s %ld %d", tempUser.username, tempPasswd, tempUser.role, &tempUser.lock_time, &tempUser.attempts) != EOF) {
             if (strcmp(UserName, tempUser.username) == 0) {
                 printf("Identifiant déjà utilisé. Veuillez choisir un autre identifiant.\n");
                 fclose(file);
@@ -75,6 +82,16 @@ void signUp() {
         fclose(file);
     }
 
+    
+    do {
+        printf("Entrez votre rôle (Agent, Client) : ");
+        scanf("%s", Role);
+        if (strcmp(Role, "Agent") != 0 && strcmp(Role, "Client") != 0) {
+            printf("Rôle invalide. Veuillez entrer 'Agent' ou 'Client'.\n");
+        }
+    } while (strcmp(Role, "Agent") != 0 && strcmp(Role, "Client") != 0);
+
+    
     file = fopen("users.txt", "a");
     if (file == NULL) {
         printf("Erreur d'ouverture du fichier.\n");
@@ -91,6 +108,7 @@ int signIn(char *currentRole) {
     char Passwd[MAX_PASSSWD];
     char UserName[MAX_USERNAME];
     User tempUser;
+    char tempPasswd[MAX_PASSSWD];
     int found = 0;
     int loginSuccess = 0;
 
@@ -112,12 +130,10 @@ int signIn(char *currentRole) {
 
     time_t current_time = time(NULL);
 
-    while (fscanf(file, "%s %s %s %ld %d", tempUser.username, tempUser.password, tempUser.role, &tempUser.lock_time, &tempUser.attempts) != EOF) {
+    while (fscanf(file, "%s %s %s %ld %d", tempUser.username, tempPasswd, tempUser.role, &tempUser.lock_time, &tempUser.attempts) != EOF) {
         if (strcmp(UserName, tempUser.username) == 0) {
             found = 1;
             if (tempUser.lock_time > 0) {
-                time_t current_time = time(NULL);
-                
                 if (difftime(current_time, tempUser.lock_time) < LOCK_TIME) {
                     printf("Compte verrouillé. Veuillez réessayer dans %.0f secondes.\n", LOCK_TIME - difftime(current_time, tempUser.lock_time));
                     fclose(file);
@@ -128,7 +144,7 @@ int signIn(char *currentRole) {
                     tempUser.attempts = 0; 
                 }
             }
-            if (strcmp(Passwd, tempUser.password) == 0) {
+            if (strcmp(Passwd, tempPasswd) == 0) {
                 printf("Connexion réussie !\n");
                 printf("Votre rôle est : %s\n", tempUser.role);
                 strcpy(currentRole, tempUser.role);
@@ -138,14 +154,14 @@ int signIn(char *currentRole) {
                 tempUser.attempts += 1;
                 printf("Mot de passe incorrect.\n");
                 if (tempUser.attempts >= MAX_ATTEMPTS) {
-                    tempUser.lock_time = time(NULL); 
+                    tempUser.lock_time = current_time; 
                     printf("Compte verrouillé après %d tentatives échouées.\n", MAX_ATTEMPTS);
                 } else {
                     printf("Nombre de tentatives restantes : %d\n", MAX_ATTEMPTS - tempUser.attempts);
                 }
             }
         }
-        fprintf(tempFile, "%s %s %s %ld %d\n", tempUser.username, tempUser.password, tempUser.role, tempUser.lock_time, tempUser.attempts);
+        fprintf(tempFile, "%s %s %s %ld %d\n", tempUser.username, tempPasswd, tempUser.role, tempUser.lock_time, tempUser.attempts);
     }
 
     fclose(file);
@@ -165,9 +181,8 @@ void addUser() {
     char Passwd[MAX_PASSSWD];
     char UserName[MAX_USERNAME];
     char Role[ROLE_SIZE];
-    FILE *file, *tempFile;
+    FILE *file;
     User tempUser;
-    int found = 0;
 
     printf("=== Ajouter un nouvel utilisateur ===\n");
 
@@ -176,22 +191,16 @@ void addUser() {
     printf("Entrez le mot de passe : ");
     scanf("%s", Passwd);
     
-    do {
-        printf("Entrez le rôle (Administrateur, Agent, Client) : ");
-        scanf("%s", Role);
-        if (strcmp(Role, "Administrateur") != 0 && strcmp(Role, "Agent") != 0 && strcmp(Role, "Client") != 0) {
-            printf("Rôle invalide. Veuillez entrer 'Administrateur', 'Agent' ou 'Client'.\n");
-        }
-    } while (strcmp(Role, "Administrateur") != 0 && strcmp(Role, "Agent") != 0 && strcmp(Role, "Client") != 0);
-
     if (!PasswdValidOrInvalid(Passwd, UserName)) {
         printf("Mot de passe invalide. Veuillez réessayer.\n");
         return;
     }
 
+    
     file = fopen("users.txt", "r");
     if (file != NULL) {
-        while (fscanf(file, "%s %s %s %ld %d", tempUser.username, tempUser.password, tempUser.role, &tempUser.lock_time, &tempUser.attempts) != EOF) {
+        char tempPasswd[MAX_PASSSWD];
+        while (fscanf(file, "%s %s %s %ld %d", tempUser.username, tempPasswd, tempUser.role, &tempUser.lock_time, &tempUser.attempts) != EOF) {
             if (strcmp(UserName, tempUser.username) == 0) {
                 printf("Identifiant déjà utilisé. Veuillez choisir un autre identifiant.\n");
                 fclose(file);
@@ -201,6 +210,16 @@ void addUser() {
         fclose(file);
     }
 
+    
+    do {
+        printf("Entrez le rôle (Administrateur/Agent/Client) : ");
+        scanf("%s", Role);
+        if (strcmp(Role, "Administrateur") != 0 && strcmp(Role, "Agent") != 0 && strcmp(Role, "Client") != 0) {
+            printf("Rôle invalide. Veuillez entrer 'Administrateur', 'Agent' ou 'Client'.\n");
+        }
+    } while (strcmp(Role, "Administrateur") != 0 && strcmp(Role, "Agent") != 0 && strcmp(Role, "Client") != 0);
+
+    
     file = fopen("users.txt", "a");
     if (file == NULL) {
         printf("Erreur d'ouverture du fichier.\n");
@@ -213,6 +232,123 @@ void addUser() {
     printf("Nouvel utilisateur ajouté avec succès !\n");
 }
 
+void changeUserRole() {
+    char usernameToChange[MAX_USERNAME];
+    char newRole[ROLE_SIZE];
+    FILE *file = fopen("users.txt", "r");
+    FILE *tempFile = fopen("temp.txt", "w");
+    if (file == NULL || tempFile == NULL) {
+        printf("Erreur d'ouverture du fichier.\n");
+        if (file != NULL) fclose(file);
+        if (tempFile != NULL) fclose(tempFile);
+        return;
+    }
+
+    printf("Entrez l'identifiant de l'utilisateur à changer : ");
+    scanf("%s", usernameToChange);
+
+    
+    do {
+        printf("Entrez le nouveau rôle (Administrateur/Agent/Client) : ");
+        scanf("%s", newRole);
+        if (strcmp(newRole, "Administrateur") != 0 && strcmp(newRole, "Agent") != 0 && strcmp(newRole, "Client") != 0) {
+            printf("Rôle invalide. Veuillez entrer 'Administrateur', 'Agent' ou 'Client'.\n");
+        }
+    } while (strcmp(newRole, "Administrateur") != 0 && strcmp(newRole, "Agent") != 0 && strcmp(newRole, "Client") != 0);
+
+    User tempUser;
+    char tempPasswd[MAX_PASSSWD];
+    int found = 0;
+
+    while (fscanf(file, "%s %s %s %ld %d", tempUser.username, tempPasswd, tempUser.role, &tempUser.lock_time, &tempUser.attempts) != EOF) {
+        if (strcmp(tempUser.username, usernameToChange) == 0) {
+            strcpy(tempUser.role, newRole);
+            found = 1;
+            printf("Le rôle de %s a été changé en %s.\n", usernameToChange, newRole);
+        }
+        fprintf(tempFile, "%s %s %s %ld %d\n", tempUser.username, tempPasswd, tempUser.role, tempUser.lock_time, tempUser.attempts);
+    }
+
+    fclose(file);
+    fclose(tempFile);
+
+    if (!found) {
+        printf("Utilisateur %s non trouvé.\n", usernameToChange);
+        remove("temp.txt");
+    } else {
+        remove("users.txt");
+        rename("temp.txt", "users.txt");
+    }
+}
+
+void deleteUser() {
+    char usernameToDelete[MAX_USERNAME];
+    FILE *file = fopen("users.txt", "r");
+    FILE *tempFile = fopen("temp.txt", "w");
+    if (file == NULL || tempFile == NULL) {
+        printf("Erreur d'ouverture du fichier.\n");
+        if (file != NULL) fclose(file);
+        if (tempFile != NULL) fclose(tempFile);
+        return;
+    }
+
+    printf("Entrez l'identifiant de l'utilisateur à supprimer : ");
+    scanf("%s", usernameToDelete);
+
+    User tempUser;
+    char tempPasswd[MAX_PASSSWD];
+    int found = 0;
+
+    while (fscanf(file, "%s %s %s %ld %d", tempUser.username, tempPasswd, tempUser.role, &tempUser.lock_time, &tempUser.attempts) != EOF) {
+        if (strcmp(tempUser.username, usernameToDelete) != 0) {
+            fprintf(tempFile, "%s %s %s %ld %d\n", tempUser.username, tempPasswd, tempUser.role, tempUser.lock_time, tempUser.attempts);
+        } else {
+            found = 1;
+            printf("Utilisateur %s supprimé.\n", usernameToDelete);
+        }
+    }
+
+    fclose(file);
+    fclose(tempFile);
+
+    if (!found) {
+        printf("Utilisateur %s non trouvé.\n", usernameToDelete);
+        remove("temp.txt");
+    } else {
+        remove("users.txt");
+        rename("temp.txt", "users.txt");
+    }
+}
+
+void displayUsers() {
+    FILE *file = fopen("users.txt", "r");
+    if (file == NULL) {
+        printf("Erreur d'ouverture du fichier.\n");
+        return;
+    }
+
+    User tempUser;
+    char tempPasswd[MAX_PASSSWD];
+    printf("\n=== Liste des Utilisateurs ===\n");
+    printf("%-15s %-15s %-10s %-10s\n", "Username", "Role", "Locked", "Attempts");
+    printf("---------------------------------------------------------------\n");
+    while (fscanf(file, "%s %s %s %ld %d", tempUser.username, tempPasswd, tempUser.role, &tempUser.lock_time, &tempUser.attempts) != EOF) {
+        printf("%-15s %-15s %-10d %-10d\n", tempUser.username, tempUser.role, (tempUser.lock_time > 0) ? 1 : 0, tempUser.attempts);
+    }
+    fclose(file);
+}
+
+
+int hasPermission(const char *currentRole, const char *requiredRole) {
+    if (strcmp(currentRole, "Administrateur") == 0) {
+        return 1; 
+    }
+    if (strcmp(currentRole, requiredRole) == 0) {
+        return 1;
+    }
+    return 0;
+}
+
 void manageRoles(const char *currentRole) {
     if (strcmp(currentRole, "Administrateur") != 0) {
         printf("Vous n'avez pas les droits pour gérer les utilisateurs.\n");
@@ -223,7 +359,10 @@ void manageRoles(const char *currentRole) {
     do {
         printf("\n=== Gestion des Utilisateurs ===\n");
         printf("1. Ajouter un nouvel utilisateur\n");
-        printf("2. Retour au menu principal\n");
+        printf("2. Changer le rôle d'un utilisateur\n");
+        printf("3. Supprimer un utilisateur\n");
+        printf("4. Afficher la liste des utilisateurs\n");
+        printf("5. Retour au menu principal\n");
         printf("Choisissez une option : ");
         scanf("%d", &choice);
 
@@ -232,13 +371,22 @@ void manageRoles(const char *currentRole) {
                 addUser();
                 break;
             case 2:
+                changeUserRole();
+                break;
+            case 3:
+                deleteUser();
+                break;
+            case 4:
+                displayUsers();
+                break;
+            case 5:
                 printf("Retour au menu principal.\n");
                 break;
             default:
                 printf("Option invalide.\n");
         }
 
-    } while (choice != 2);
+    } while (choice != 5);
 }
 
 int main() {
@@ -259,7 +407,18 @@ int main() {
                 break;
             case 2:
                 if (signIn(currentRole)) {
-                    manageRoles(currentRole);
+                    if (strcmp(currentRole, "Administrateur") == 0) {
+                        manageRoles(currentRole);
+                        
+                    } else if (strcmp(currentRole, "Agent") == 0) {
+                        
+                        printf("Fonctionnalités de gestion des réclamations pour Agent.\n");
+                        
+                    } else if (strcmp(currentRole, "Client") == 0) {
+                        
+                        printf("Fonctionnalités de soumission et de suivi des réclamations pour Client.\n");
+                    
+                    }
                 }
                 break;
             case 3:
