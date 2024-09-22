@@ -1,3 +1,0 @@
-admin AdminPass123! Administrateur 0 0
-amine HHHdj@12345 Agent 0 0
-karim JgdhH@12345 Administrateur 0 0

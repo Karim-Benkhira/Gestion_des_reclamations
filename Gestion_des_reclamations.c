@@ -11,6 +11,8 @@
 #define ROLE_SIZE 20
 #define LOCK_TIME 900 
 
+/*====================== 1 =====================*/
+
 typedef struct {
     char username[MAX_USERNAME];
     char password[MAX_PASSSWD];
@@ -19,6 +21,23 @@ typedef struct {
     int attempts;
     time_t lock_time; 
 } User;
+/*====================== 1 =====================*/
+
+/*====================== 2 =====================*/
+typedef struct 
+{
+    char id[30];
+    char username[MAX_USERNAME];
+    char motif[60];
+    char description[300];
+    char category[60];
+    char status[20];
+    char date[20];
+    char notes[300];
+    char priority[10];
+}Complaint;
+
+/*====================== 2 =====================*/
 
 /*=================== Functions =======> 1 =====================*/
 int PasswdValidOrInvalid(const char *passwd, const char *username);
@@ -32,6 +51,19 @@ void displayUsers();
 int hasPermission(const char *currentRole, const char *requiredRole);
 
 /*=================== Functions =======> 1 =====================*/
+
+/*=================== Functions =======> 2 =====================*/
+
+void addComplaint(const char *username);
+void displayComplaints(const char *currentRole, const char *username);
+void modifyComplaint();
+void deleteComplaint();
+void processComplaint();
+void generateStatistics();
+void generateDailyReport();
+
+
+/*=================== Functions =======> 2 =====================*/
 
 int PasswdValidOrInvalid(const char *passwd, const char *username) {
     int P_Upper = 0, P_Lower = 0, P_Digit = 0, P_Special = 0;
@@ -55,15 +87,25 @@ void signUp() {
     char Role[ROLE_SIZE];
     FILE *file;
 
-    printf("=== Inscription ===\n");
-
-    printf("Entrez votre identifiant : ");
+    printf("\n");
+    printf("╔════════════════════════════════════════════════╗\n");
+    printf("║              ✦✦✦  INSCRIPTION  ✦✦✦             ║\n");
+    printf("╠════════════════════════════════════════════════╣\n");
+    printf("║ ➤ Entrez votre identifiant :                   ║\n");
+    printf("╚════════════════════════════════════════════════╝\n");
     scanf("%s", UserName);
-    printf("Entrez votre mot de passe : ");
+    printf("\n");
+    printf("╔═════════════════════════════════════════════╗\n");
+    printf("║ ➤ Entrez votre mot de passe :               ║\n");
+    printf("╚═════════════════════════════════════════════╝\n");
     scanf("%s", Passwd);
     
     if (!PasswdValidOrInvalid(Passwd, UserName)) {
-        printf("Mot de passe invalide. Veuillez réessayer.\n");
+        printf("\n");
+        printf("╔════════════════════════════════════════════════════════════╗\n");
+        printf("║   ⚠️  Mot de passe invalide. Veuillez réessayer.   ⚠️        ║\n");
+        printf("╚════════════════════════════════════════════════════════════╝\n");
+
         return;
     }
 
@@ -94,14 +136,18 @@ void signUp() {
     
     file = fopen("users.txt", "a");
     if (file == NULL) {
-        printf("Erreur d'ouverture du fichier.\n");
+        printf("Erreur d'ouverture du fichier...\n");
         return;
     }
 
     fprintf(file, "%s %s %s 0 0\n", UserName, Passwd, Role);
     fclose(file);
 
-    printf("Inscription réussie !\n");
+    printf("\n");
+    printf("╔═════════════════════════════════════════════════════╗\n");
+    printf("║   ✅  Félicitations ! Inscription réussie !  ✅     ║\n");
+    printf("╚═════════════════════════════════════════════════════╝\n");
+
 }
 
 int signIn(char *currentRole) {
@@ -112,8 +158,10 @@ int signIn(char *currentRole) {
     int found = 0;
     int loginSuccess = 0;
 
-    printf("=== Connexion ===\n");
-
+    printf("\n");
+    printf("╔═════════════════════════════════════════════╗\n");
+    printf("║            🔐  Connexion  🔐                ║\n");
+    printf("╚═════════════════════════════════════════════╝\n");
     printf("Entrez votre identifiant : ");
     scanf("%s", UserName);
     printf("Entrez votre mot de passe : ");
@@ -145,20 +193,29 @@ int signIn(char *currentRole) {
                 }
             }
             if (strcmp(Passwd, tempPasswd) == 0) {
-                printf("Connexion réussie !\n");
+                printf("\n");
+                printf("╔════════════════════════════════════════════╗\n");
+                printf("║ ✅  Connexion réussie !                    ║\n");
+                printf("╚════════════════════════════════════════════╝\n");
+
                 printf("Votre rôle est : %s\n", tempUser.role);
                 strcpy(currentRole, tempUser.role);
                 tempUser.attempts = 0; 
                 loginSuccess = 1;
             } else {
                 tempUser.attempts += 1;
-                printf("Mot de passe incorrect.\n");
+                printf("\n");
+                printf("╔═════════════════════════════════════════════════════╗\n");
+                printf("║ ❌  Mot de passe incorrect.                         ║\n");
                 if (tempUser.attempts >= MAX_ATTEMPTS) {
-                    tempUser.lock_time = current_time; 
-                    printf("Compte verrouillé après %d tentatives échouées.\n", MAX_ATTEMPTS);
+                    tempUser.lock_time = current_time;
+                    printf("╠═════════════════════════════════════════════════════╣\n"); 
+                    printf("║ 🔒  Compte verrouillé après %d tentatives échouées. ║\n", MAX_ATTEMPTS);
                 } else {
-                    printf("Nombre de tentatives restantes : %d\n", MAX_ATTEMPTS - tempUser.attempts);
+                    printf("╠═════════════════════════════════════════════════════╣\n");
+                    printf("║ ⚠️  Nombre de tentatives restantes : %d               ║\n", MAX_ATTEMPTS - tempUser.attempts);
                 }
+                printf("╚═════════════════════════════════════════════════════╝\n");
             }
         }
         fprintf(tempFile, "%s %s %s %ld %d\n", tempUser.username, tempPasswd, tempUser.role, tempUser.lock_time, tempUser.attempts);
@@ -171,7 +228,11 @@ int signIn(char *currentRole) {
     rename("temp.txt", "users.txt");
 
     if (!found) {
-        printf("Identifiant incorrect.\n");
+        printf("\n");
+        printf("╔══════════════════════════════════════════╗\n");
+        printf("║ ❌  Identifiant incorrect.               ║\n");
+        printf("╚══════════════════════════════════════════╝\n");
+
     }
 
     return loginSuccess;
@@ -184,15 +245,28 @@ void addUser() {
     FILE *file;
     User tempUser;
 
-    printf("=== Ajouter un nouvel utilisateur ===\n");
+    printf("\n");
+    printf("╔══════════════════════════════════════════════════════════╗\n");
+    printf("║          ✦✦✦  Ajouter un nouvel utilisateur  ✦✦✦         ║\n");
+    printf("╚══════════════════════════════════════════════════════════╝\n");
 
-    printf("Entrez l'identifiant : ");
+    printf("\n");
+    printf("╔══════════════════════════════════════════════════╗\n");
+    printf("║ Entrez l'identifiant :                           ║\n");
+    printf("╚══════════════════════════════════════════════════╝\n");
     scanf("%s", UserName);
-    printf("Entrez le mot de passe : ");
+    printf("\n");
+    printf("╔══════════════════════════════════════════════════╗\n");
+    printf("║ Entrez le mot de passe :                         ║\n");
+    printf("╚══════════════════════════════════════════════════╝\n");
     scanf("%s", Passwd);
     
-    if (!PasswdValidOrInvalid(Passwd, UserName)) {
-        printf("Mot de passe invalide. Veuillez réessayer.\n");
+    if (!PasswdValidOrInvalid(Passwd, UserName))
+    {
+        printf("\n");
+        printf("╔══════════════════════════════════════════════════╗\n");
+        printf("║ ❌  Mot de passe invalide. Veuillez réessayer.   ║\n");
+        printf("╚══════════════════════════════════════════════════╝\n");
         return;
     }
 
@@ -201,8 +275,13 @@ void addUser() {
     if (file != NULL) {
         char tempPasswd[MAX_PASSSWD];
         while (fscanf(file, "%s %s %s %ld %d", tempUser.username, tempPasswd, tempUser.role, &tempUser.lock_time, &tempUser.attempts) != EOF) {
-            if (strcmp(UserName, tempUser.username) == 0) {
-                printf("Identifiant déjà utilisé. Veuillez choisir un autre identifiant.\n");
+            if (strcmp(UserName, tempUser.username) == 0)
+            {
+                printf("\n");
+                printf("╔══════════════════════════════════════════════════╗\n");
+                printf("║ ❌  Identifiant déjà utilisé. Veuillez choisir   ║\n");
+                printf("║      un autre identifiant.                       ║\n");
+                printf("╚══════════════════════════════════════════════════╝\n");
                 fclose(file);
                 return;
             }
@@ -212,47 +291,79 @@ void addUser() {
 
     
     do {
-        printf("Entrez le rôle (Administrateur/Agent/Client) : ");
+        printf("\n");
+        printf("╔═══════════════════════════════════════════════════════╗\n");
+        printf("║   ➤ Entrez le rôle : Administrateur / Agent / Client  ║\n");
+        printf("╠═══════════════════════════════════════════════════════╣\n");
+        printf("║ Rôle: ");
         scanf("%s", Role);
-        if (strcmp(Role, "Administrateur") != 0 && strcmp(Role, "Agent") != 0 && strcmp(Role, "Client") != 0) {
-            printf("Rôle invalide. Veuillez entrer 'Administrateur', 'Agent' ou 'Client'.\n");
+        printf("╚═══════════════════════════════════════════════════════╝\n");
+        if (strcmp(Role, "Administrateur") != 0 && strcmp(Role, "Agent") != 0 && strcmp(Role, "Client") != 0)
+        {
+            printf("\n");
+            printf("╔════════════════════════════════════════════════════════╗\n");
+            printf("║ ❌  Rôle invalide. Veuillez entrer 'Administrateur',   ║\n");
+            printf("║     'Agent' ou 'Client'.                               ║\n");
+            printf("╚════════════════════════════════════════════════════════╝\n");
         }
     } while (strcmp(Role, "Administrateur") != 0 && strcmp(Role, "Agent") != 0 && strcmp(Role, "Client") != 0);
 
     
     file = fopen("users.txt", "a");
     if (file == NULL) {
-        printf("Erreur d'ouverture du fichier.\n");
+        printf("\n");
+        printf("╔══════════════════════════════════════════════════╗\n");
+        printf("║ ⚠️ Erreur d'ouverture du fichier.                 ║\n");
+        printf("╚══════════════════════════════════════════════════╝\n");
         return;
     }
 
     fprintf(file, "%s %s %s 0 0\n", UserName, Passwd, Role);
     fclose(file);
 
-    printf("Nouvel utilisateur ajouté avec succès !\n");
+    printf("\n");
+    printf("╔══════════════════════════════════════════════════╗\n");
+    printf("║ ✅  Nouvel utilisateur ajouté avec succès !      ║\n");
+    printf("╚══════════════════════════════════════════════════╝\n");
 }
 
-void changeUserRole() {
+void changeUserRole()
+{
     char usernameToChange[MAX_USERNAME];
     char newRole[ROLE_SIZE];
     FILE *file = fopen("users.txt", "r");
     FILE *tempFile = fopen("temp.txt", "w");
-    if (file == NULL || tempFile == NULL) {
-        printf("Erreur d'ouverture du fichier.\n");
+    if (file == NULL || tempFile == NULL)
+    {
+        printf("\n");
+        printf("╔══════════════════════════════════════════════════╗\n");
+        printf("║ ⚠️  Erreur d'ouverture du fichier.                ║\n");
+        printf("╚══════════════════════════════════════════════════╝\n");
         if (file != NULL) fclose(file);
         if (tempFile != NULL) fclose(tempFile);
         return;
     }
 
-    printf("Entrez l'identifiant de l'utilisateur à changer : ");
+    printf("\n");
+    printf("╔══════════════════════════════════════════════════════╗\n");
+    printf("║ ➤ Entrez l'identifiant de l'utilisateur à changer :  ║\n");
+    printf("╚══════════════════════════════════════════════════════╝\n");
     scanf("%s", usernameToChange);
 
     
     do {
-        printf("Entrez le nouveau rôle (Administrateur/Agent/Client) : ");
+        printf("\n");
+        printf("╔══════════════════════════════════════════════════════════╗\n");
+        printf("║ ➤ Entrez le nouveau rôle (Administrateur/Agent/Client) : ║\n");
+        printf("╚══════════════════════════════════════════════════════════╝\n");
         scanf("%s", newRole);
-        if (strcmp(newRole, "Administrateur") != 0 && strcmp(newRole, "Agent") != 0 && strcmp(newRole, "Client") != 0) {
-            printf("Rôle invalide. Veuillez entrer 'Administrateur', 'Agent' ou 'Client'.\n");
+        if (strcmp(newRole, "Administrateur") != 0 && strcmp(newRole, "Agent") != 0 && strcmp(newRole, "Client") != 0)
+        {
+            printf("\n");
+            printf("╔════════════════════════════════════════════════════════╗\n");
+            printf("║ ❌ Rôle invalide. Veuillez entrer 'Administrateur',    ║\n");
+            printf("║    'Agent' ou 'Client'.                                ║\n");
+            printf("╚════════════════════════════════════════════════════════╝\n");
         }
     } while (strcmp(newRole, "Administrateur") != 0 && strcmp(newRole, "Agent") != 0 && strcmp(newRole, "Client") != 0);
 
@@ -261,10 +372,14 @@ void changeUserRole() {
     int found = 0;
 
     while (fscanf(file, "%s %s %s %ld %d", tempUser.username, tempPasswd, tempUser.role, &tempUser.lock_time, &tempUser.attempts) != EOF) {
-        if (strcmp(tempUser.username, usernameToChange) == 0) {
+        if (strcmp(tempUser.username, usernameToChange) == 0)
+        {
             strcpy(tempUser.role, newRole);
             found = 1;
-            printf("Le rôle de %s a été changé en %s.\n", usernameToChange, newRole);
+            printf("\n");
+            printf("╔══════════════════════════════════════════════════╗\n");
+            printf("║ ✅  Le rôle de %s a été changé en %s.            ║\n", usernameToChange, newRole);
+            printf("╚══════════════════════════════════════════════════╝\n");
         }
         fprintf(tempFile, "%s %s %s %ld %d\n", tempUser.username, tempPasswd, tempUser.role, tempUser.lock_time, tempUser.attempts);
     }
@@ -272,8 +387,12 @@ void changeUserRole() {
     fclose(file);
     fclose(tempFile);
 
-    if (!found) {
-        printf("Utilisateur %s non trouvé.\n", usernameToChange);
+    if (!found)
+    {
+        printf("\n");
+        printf("╔══════════════════════════════════════════════════╗\n");
+        printf("║ ⚠️  Utilisateur %s non trouvé.                    ║\n", usernameToChange);
+        printf("╚══════════════════════════════════════════════════╝\n");
         remove("temp.txt");
     } else {
         remove("users.txt");
@@ -285,14 +404,21 @@ void deleteUser() {
     char usernameToDelete[MAX_USERNAME];
     FILE *file = fopen("users.txt", "r");
     FILE *tempFile = fopen("temp.txt", "w");
-    if (file == NULL || tempFile == NULL) {
-        printf("Erreur d'ouverture du fichier.\n");
+    if (file == NULL || tempFile == NULL)
+    {
+        printf("\n");
+        printf("╔══════════════════════════════════════════════════╗\n");
+        printf("║ ⚠️  Erreur d'ouverture du fichier.                ║\n");
+        printf("╚══════════════════════════════════════════════════╝\n");
         if (file != NULL) fclose(file);
         if (tempFile != NULL) fclose(tempFile);
         return;
     }
 
-    printf("Entrez l'identifiant de l'utilisateur à supprimer : ");
+    printf("\n");
+    printf("╔═══════════════════════════════════════════════════════╗\n");
+    printf("║ ➤ Entrez l'identifiant de l'utilisateur à supprimer : ║\n");
+    printf("╚═══════════════════════════════════════════════════════╝\n");
     scanf("%s", usernameToDelete);
 
     User tempUser;
@@ -304,15 +430,22 @@ void deleteUser() {
             fprintf(tempFile, "%s %s %s %ld %d\n", tempUser.username, tempPasswd, tempUser.role, tempUser.lock_time, tempUser.attempts);
         } else {
             found = 1;
-            printf("Utilisateur %s supprimé.\n", usernameToDelete);
+            printf("\n");
+            printf("╔══════════════════════════════════════════════════╗\n");
+            printf("║ ✅  Utilisateur %s supprimé avec succès.         ║\n", usernameToDelete);
+            printf("╚══════════════════════════════════════════════════╝\n");
         }
     }
 
     fclose(file);
     fclose(tempFile);
 
-    if (!found) {
-        printf("Utilisateur %s non trouvé.\n", usernameToDelete);
+    if (!found)
+    {
+        printf("\n");
+        printf("╔══════════════════════════════════════════════════╗\n");
+        printf("║ ⚠️  Utilisateur %s non trouvé.                    ║\n", usernameToDelete);
+        printf("╚══════════════════════════════════════════════════╝\n");
         remove("temp.txt");
     } else {
         remove("users.txt");
@@ -322,19 +455,28 @@ void deleteUser() {
 
 void displayUsers() {
     FILE *file = fopen("users.txt", "r");
-    if (file == NULL) {
-        printf("Erreur d'ouverture du fichier.\n");
+    if (file == NULL)
+    {
+        printf("\n");
+        printf("╔══════════════════════════════════════════════════╗\n");
+        printf("║ ⚠️  Erreur d'ouverture du fichier.                ║\n");
+        printf("╚══════════════════════════════════════════════════╝\n");
         return;
     }
 
     User tempUser;
     char tempPasswd[MAX_PASSSWD];
-    printf("\n=== Liste des Utilisateurs ===\n");
-    printf("%-15s %-15s %-10s %-10s\n", "Username", "Role", "Locked", "Attempts");
-    printf("---------------------------------------------------------------\n");
-    while (fscanf(file, "%s %s %s %ld %d", tempUser.username, tempPasswd, tempUser.role, &tempUser.lock_time, &tempUser.attempts) != EOF) {
-        printf("%-15s %-15s %-10d %-10d\n", tempUser.username, tempUser.role, (tempUser.lock_time > 0) ? 1 : 0, tempUser.attempts);
+    printf("\n");
+    printf("╔═══════════════════════════════════════════════════════╗\n");
+    printf("║                ✦ Liste des Utilisateurs ✦             ║\n");
+    printf("╠═══════════════════════════════════════════════════════╣\n");
+    printf("║ %-15s %-15s %-10s %-10s ║\n", "Username", "Role", "Locked", "Attempts");
+    printf("╠═══════════════════════════════════════════════════════╣\n");
+    while (fscanf(file, "%s %s %s %ld %d", tempUser.username, tempPasswd, tempUser.role, &tempUser.lock_time, &tempUser.attempts) != EOF)
+    {
+        printf("║ %-15s %-15s %-10d %-10d ║\n", tempUser.username, tempUser.role, (tempUser.lock_time > 0) ? 1 : 0, tempUser.attempts);
     }
+    printf("╚═══════════════════════════════════════════════════════╝\n");
     fclose(file);
 }
 
@@ -357,14 +499,27 @@ void manageRoles(const char *currentRole) {
 
     int choice;
     do {
-        printf("\n=== Gestion des Utilisateurs ===\n");
-        printf("1. Ajouter un nouvel utilisateur\n");
-        printf("2. Changer le rôle d'un utilisateur\n");
-        printf("3. Supprimer un utilisateur\n");
-        printf("4. Afficher la liste des utilisateurs\n");
-        printf("5. Retour au menu principal\n");
-        printf("Choisissez une option : ");
+        printf("\n");
+        printf("╔═════════════════════════════════════════════════════════════════╗\n");
+        printf("║        ✦✦✦  GESTION DES UTILISATEURS ET DES PLAINTES  ✦✦✦       ║\n");
+        printf("╠═════════════════════════════════════════════════════════════════╣\n");
+        printf("║ 1.  ➤ Ajouter un nouvel utilisateur                             ║\n");
+        printf("║ 2.  ➤ Changer le rôle d'un utilisateur                          ║\n");
+        printf("║ 3.  ➤ Supprimer un utilisateur                                  ║\n");
+        printf("║ 4.  ➤ Afficher la liste des utilisateurs                        ║\n");
+        printf("║ 5.  ➤ Ajouter une nouvelle plainte                              ║\n");
+        printf("║ 6.  ➤ Modifier une plainte                                      ║\n");
+        printf("║ 7.  ➤ Supprimer une plainte                                     ║\n");
+        printf("║ 8.  ➤ Afficher la liste des plaintes                            ║\n");
+        printf("║ 9.  ➤ Traiter une plainte                                       ║\n");
+        printf("║ 10. ➤ Générer les statistiques                                  ║\n");
+        printf("║ 11. ➤ Générer un rapport quotidien                              ║\n");
+        printf("║ 12. ➤ Retour au menu principal                                  ║\n");
+        printf("╠═════════════════════════════════════════════════════════════════╣\n");
+        printf("║ Choisissez une option :                                         ║\n");
+        printf("╚═════════════════════════════════════════════════════════════════╝\n");
         scanf("%d", &choice);
+        printf("Choice selected: %d\n", choice);
 
         switch (choice) {
             case 1:
@@ -380,25 +535,656 @@ void manageRoles(const char *currentRole) {
                 displayUsers();
                 break;
             case 5:
-                printf("Retour au menu principal.\n");
+                addComplaint("Administrateur");
+                break;
+            case 6:
+                modifyComplaint();
+                break;
+            case 7:
+                deleteComplaint();
+                break;
+            case 8:
+                displayComplaints("Administrateur", ""); 
+                break;
+            case 9:
+                processComplaint();
+                break;
+            case 10:
+                generateStatistics();
+                break;
+            case 11:
+                generateDailyReport();
+                break;
+            case 12:
+                printf("\n");
+                printf("╔══════════════════════════════════════╗\n");
+                printf("║      🔙  Retour au menu principal    ║\n");
+                printf("╚══════════════════════════════════════╝\n");
                 break;
             default:
-                printf("Option invalide.\n");
+                printf("\n");
+                printf("╔══════════════════════════════════╗\n");
+                printf("║      ⚠️  Option invalide !        ║\n");
+                printf("╚══════════════════════════════════╝\n");
         }
 
-    } while (choice != 5);
+    } while (choice != 12);
 }
 
-int main() {
+
+/*-------------------------------------------------------*/
+
+void addComplaint(const char *username)
+{
+    Complaint newComplaint;
+    FILE *file = fopen("complaints.txt", "a");
+    if(file == NULL)
+    {
+        printf("\n");
+        printf("╔════════════════════════════════════════════════════════════╗\n");
+        printf("║         ⚠ Erreur d'ouverture du fichier des plaintes ⚠     ║\n");
+        printf("╚════════════════════════════════════════════════════════════╝\n");
+        return;
+    }
+
+    sprintf(newComplaint.id, "CMP%05d", rand() % 100000);
+    strcpy(newComplaint.username,username);
+
+    printf("\n");
+    printf("╔════════════════════════════════════════════════════════════╗\n");
+    printf("║                ✦ Ajouter une nouvelle plainte ✦            ║\n");
+    printf("╠════════════════════════════════════════════════════════════╣\n");
+    printf("║ Entrez le motif de la plainte :                            ║\n");
+    printf("╚════════════════════════════════════════════════════════════╝\n");
+    scanf(" %[^\n]s",newComplaint.motif);
+
+    printf("\n");
+    printf("╔════════════════════════════════════════════════════════════╗\n");
+    printf("║ Entrez la description de la plainte :                      ║\n");
+    printf("╚════════════════════════════════════════════════════════════╝\n");
+    scanf(" %[^\n]",newComplaint.description);
+
+    printf("\n");
+    printf("╔════════════════════════════════════════════════════════════╗\n");
+    printf("║ Entrez la catégorie de la plainte :                        ║\n");
+    printf("╚════════════════════════════════════════════════════════════╝\n");
+    scanf(" %[^\n]s",newComplaint.category);
+
+    strcpy(newComplaint.status,"En cours ...");
+    strcpy(newComplaint.notes,"");
+
+    time_t t = time(NULL);
+    struct  tm tm = *localtime(&t);
+    sprintf(newComplaint.date, "%04d-%02d-%02d",tm.tm_year + 1900 ,tm.tm_mon + 1 , tm.tm_mday );
+
+    if(strstr(newComplaint.description,"urgent") || strstr(newComplaint.description,"danger"))
+        strcpy(newComplaint.priority,"danger");
+    else if(strstr(newComplaint.description,"problème") || strstr(newComplaint.description,"retard"))
+        strcpy(newComplaint.priority,"Moyenne");
+    else 
+        strcpy(newComplaint.priority,"Basse");
+    
+    fprintf(file,"%s;%s;%s;%s;%s;%s;%s;%s\n",
+            newComplaint.id,
+            newComplaint.username,
+            newComplaint.motif,
+            newComplaint.description,
+            newComplaint.category,
+            newComplaint.status,
+            newComplaint.date,
+            newComplaint.priority);
+    fclose(file);
+
+    printf("\n");
+    printf("╔════════════════════════════════════════════════════════════╗\n");
+    printf("║ ✦ Plainte ajoutée avec succès ! ID de la plainte : %s ✦     ║\n", newComplaint.id);
+    printf("╚════════════════════════════════════════════════════════════╝\n");
+    
+}
+
+void displayComplaints(const char *currentRole, const char *username)
+{
+    FILE *file = fopen("complaints.txt","r");
+    if(file == NULL)
+    {
+        printf("\n");
+        printf("╔════════════════════════════════════════════════════════════╗\n");
+        printf("║         ⚠ Erreur d'ouverture du fichier des plaintes ⚠     ║\n");
+        printf("╚════════════════════════════════════════════════════════════╝\n");
+        return;
+    }
+
+    Complaint tempComplaint;
+
+    printf("\n");
+    printf("╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗\n");
+    printf("║                                                   ✦ Liste des Plainte ✦                                                                       ║\n");
+    printf("╠═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣\n");
+    printf("║ %-10s %-15s %-15s %-40s %-15s %-15s %-12s %-10s   ║\n", 
+           "ID", "Username", "Motif", "Description", "Category", "Status", "Date", "Priority");
+    printf("╠═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣\n");
+
+    
+
+    while (fscanf(file, "%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^\n]\n", 
+                  tempComplaint.id, 
+                  tempComplaint.username, 
+                  tempComplaint.motif, 
+                  tempComplaint.description, 
+                  tempComplaint.category, 
+                  tempComplaint.status, 
+                  tempComplaint.date, 
+                  tempComplaint.priority) != EOF)
+                  {
+                    if (strcmp(currentRole, "Administrateur") == 0 || strcmp(currentRole, "Agent") == 0 || 
+                        (strcmp(currentRole, "Client") == 0 && strcmp(tempComplaint.username, username) == 0))
+                        {
+                            printf("║ %-10s %-15s %-15s %-40s %-16s %-16s %-14s %-10s║\n", 
+                                tempComplaint.id, 
+                                tempComplaint.username, 
+                                tempComplaint.motif, 
+                                tempComplaint.description, 
+                                tempComplaint.category, 
+                                tempComplaint.status, 
+                                tempComplaint.date, 
+                                tempComplaint.priority);
+                        }
+                  }
+    printf("╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝\n");
+    fclose(file);
+
+}
+
+void modifyComplaint()
+{
+    char complaintId[20];
+    printf("\n");
+    printf("╔════════════════════════════════════════════════════════════════╗\n");
+    printf("║              ✦ Modification d'une Plainte ✦                    ║\n");
+    printf("╠════════════════════════════════════════════════════════════════╣\n");
+    printf("║ Entrez l'ID de la plainte à modifier : ");
+    scanf("%s",complaintId);
+    printf("╚════════════════════════════════════════════════════════════════╝\n");
+
+    FILE *file = fopen("complaints.txt","r");
+    FILE *tempFile = fopen("tem_swap.txt","w");
+    if(file == NULL || tempFile == NULL)
+    {
+        printf("╔════════════════════════════════════════════════════════════════╗\n");
+        printf("║         ⚠ Erreur d'ouverture du fichier des plaintes ⚠         ║\n");
+        printf("╚════════════════════════════════════════════════════════════════╝\n");
+        if(file != NULL)
+            fclose(file);
+        if(tempFile != NULL)
+            fclose(tempFile);
+        return;
+    }
+
+    Complaint tempComplaint;
+    int found = 0;
+
+    while (fscanf(file, "%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^\n]\n", 
+                  tempComplaint.id, 
+                  tempComplaint.username, 
+                  tempComplaint.motif, 
+                  tempComplaint.description, 
+                  tempComplaint.category, 
+                  tempComplaint.status, 
+                  tempComplaint.date, 
+                  tempComplaint.priority) != EOF)
+                {
+                    if(strcmp(tempComplaint.id, complaintId) == 0)
+                    {
+                        found = 1;
+                    printf("\n");
+                    printf("╔══════════════════════════════════════════════════════════════╗\n");
+                    printf("║                ✦ Modification des détails ✦                  ║\n");
+                    printf("╠══════════════════════════════════════════════════════════════╣\n");
+                    printf("║ Motif actuel: %s\n", tempComplaint.motif);
+                    printf("║ Nouveau motif: ");
+
+                    char newMotif[50];
+                    getchar();
+                    fgets(newMotif,sizeof(newMotif),stdin);
+                    newMotif[strcspn(newMotif, "\n")] = 0;
+                    if(strlen(newMotif) > 0)
+                    {
+                        strcpy(tempComplaint.motif,newMotif);
+                    }
+
+                    printf("║ Description actuelle: %s\n", tempComplaint.description);
+                    printf("║ Nouvelle description: ");
+                    char newDescription[500];
+                    fgets(newDescription,sizeof(newDescription),stdin);
+                    newDescription[strcspn(newDescription, "\n")] = 0;
+                    if(strlen(newDescription) > 0)
+                        strcpy(tempComplaint.description,newDescription);
+
+                    printf("║ Catégorie actuelle: %s\n",tempComplaint.category);
+                    printf("║ Nouvelle catégorie: ");
+                    char newCategory[50];
+                    fgets(newCategory,sizeof(newCategory),stdin);
+                    newCategory[strcspn(newCategory, "\n")] = 0;
+                    if(strlen(newCategory) > 0)
+                        strcpy(tempComplaint.category,newCategory);
+                    
+                    printf("║ Statut actuel: %s\n",tempComplaint.status);
+                    printf("║ Nouveau statut (En cours/Résolue/Rejetée): ");
+                    char newStatus[20];
+                    fgets(newStatus,sizeof(newStatus),stdin);
+                    newStatus[strcspn(newStatus, "\n")] = 0;
+                    if(strlen(newStatus) > 0)
+                        strcpy(tempComplaint.status,newStatus);
+                    
+                    printf("║ Notes actuelles: %s\n",tempComplaint.notes);
+                    printf("║ Nouvelles notes: ");
+                    char newNotes[300];
+                    fgets(newNotes,sizeof(newNotes),stdin);
+                    newNotes[strcspn(newNotes, "\n")] = 0;
+                    if(strlen(newNotes) > 0)
+                        strcpy(tempComplaint.notes,newNotes);
+                    printf("╚══════════════════════════════════════════════════════════════╝\n");
+
+                    if (strstr(tempComplaint.description, "urgent") || strstr(tempComplaint.description, "danger"))
+                    {
+                        strcpy(tempComplaint.priority, "Haute");
+                    }else if (strstr(tempComplaint.description, "problème") || strstr(tempComplaint.description, "retard"))
+                    {
+                        strcpy(tempComplaint.priority, "Moyenne");
+                    }else
+                    {
+                        strcpy(tempComplaint.priority, "Basse");
+                    }
+                    }
+                    fprintf(tempFile, "%s;%s;%s;%s;%s;%s;%s;%s\n", 
+                        tempComplaint.id, 
+                        tempComplaint.username, 
+                        tempComplaint.motif, 
+                        tempComplaint.description, 
+                        tempComplaint.category, 
+                        tempComplaint.status, 
+                        tempComplaint.date, 
+                        tempComplaint.priority);
+
+                }
+    fclose(file);
+    fclose(tempFile);
+    if (found) {
+        remove("complaints.txt");
+        rename("tem_swap.txt", "complaints.txt");
+        printf("\n");
+        printf("╔══════════════════════════════════════════════════════════════╗\n");
+        printf("║          ✔ Plainte modifiée avec succès !                    ║\n");
+        printf("╚══════════════════════════════════════════════════════════════╝\n");
+    } else {
+        printf("\n");
+        printf("╔══════════════════════════════════════════════════════════════╗\n");
+        printf("║          ⚠ Plainte avec ID %s non trouvée !                ║\n", complaintId);
+        printf("╚══════════════════════════════════════════════════════════════╝\n");
+        remove("tem_swap.txt");
+    }
+
+}
+
+void deleteComplaint()
+{
+    char complaintId[20];
+    printf("\n");
+    printf("╔══════════════════════════════════════════════════════════════╗\n");
+    printf("║                ✦ Suppression d'une Plainte ✦                 ║\n");
+    printf("╠══════════════════════════════════════════════════════════════╣\n");
+    printf("║ Entrez l'ID de la plainte à supprimer : ");
+    scanf("%s", complaintId);
+    printf("╚══════════════════════════════════════════════════════════════╝\n");
+
+
+    FILE *file = fopen("complaints.txt", "r");
+    FILE *tempFile = fopen("temp_temp.txt", "w");
+    if (file == NULL || tempFile == NULL)
+    {
+        printf("╔══════════════════════════════════════════════════════════════╗\n");
+        printf("║         ⚠ Erreur d'ouverture du fichier des plaintes ⚠       ║\n");
+        printf("╚══════════════════════════════════════════════════════════════╝\n");
+        if (file != NULL) fclose(file);
+        if (tempFile != NULL) fclose(tempFile);
+        return;
+    }
+
+    Complaint tempComplaint;
+    int found = 0;
+
+    while (fscanf(file, "%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^\n]\n", 
+                  tempComplaint.id, 
+                  tempComplaint.username, 
+                  tempComplaint.motif, 
+                  tempComplaint.description, 
+                  tempComplaint.category, 
+                  tempComplaint.status, 
+                  tempComplaint.date, 
+                  tempComplaint.priority) != EOF) {
+        if (strcmp(tempComplaint.id, complaintId) != 0) {
+            fprintf(tempFile, "%s;%s;%s;%s;%s;%s;%s;%s\n", 
+                    tempComplaint.id, 
+                    tempComplaint.username, 
+                    tempComplaint.motif, 
+                    tempComplaint.description, 
+                    tempComplaint.category, 
+                    tempComplaint.status, 
+                    tempComplaint.date, 
+                    tempComplaint.priority);
+        } else {
+            found = 1;
+            printf("\n");
+            printf("╔═════════════════════════════════════════════════════════════════════╗\n");
+            printf("║        ✔ Plainte avec ID %s supprimée avec succès !           \n", complaintId);
+            printf("╚═════════════════════════════════════════════════════════════════════╝\n");
+        }
+    }
+
+    fclose(file);
+    fclose(tempFile);
+
+    if (found) {
+        remove("complaints.txt");
+        rename("temp_temp.txt", "complaints.txt");
+    } else {
+        printf("\n");
+        printf("╔════════════════════════════════════════════════════════════════╗\n");
+        printf("║         ⚠ Plainte avec ID %s non trouvée !                  \n", complaintId);
+        printf("╚════════════════════════════════════════════════════════════════╝\n");
+        remove("temp_temp.txt");
+    }
+}
+
+void processComplaint() 
+{
+    char complaintId[20];
+    printf("\n");
+    printf("╔══════════════════════════════════════════════════════════════╗\n");
+    printf("║             ✦ Traitement d'une Plainte ✦                     ║\n");
+    printf("╠══════════════════════════════════════════════════════════════╣\n");
+    printf("║ Entrez l'ID de la plainte à traiter : ");
+    scanf("%s", complaintId);
+    printf("╚══════════════════════════════════════════════════════════════╝\n");
+
+    FILE *file = fopen("complaints.txt", "r");
+    FILE *tempFile = fopen("temp_temp.txt", "w");
+    if (file == NULL || tempFile == NULL) {
+        printf("\n");
+        printf("╔══════════════════════════════════════════════════════════════╗\n");
+        printf("║         ⚠ Erreur d'ouverture du fichier des plaintes ⚠       ║\n");
+        printf("╚══════════════════════════════════════════════════════════════╝\n");
+        if (file != NULL) fclose(file);
+        if (tempFile != NULL) fclose(tempFile);
+        return;
+    }
+
+    Complaint tempComplaint;
+    int found = 0;
+
+    while (fscanf(file, "%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^\n]\n", 
+                  tempComplaint.id, 
+                  tempComplaint.username, 
+                  tempComplaint.motif, 
+                  tempComplaint.description, 
+                  tempComplaint.category, 
+                  tempComplaint.status, 
+                  tempComplaint.date, 
+                  tempComplaint.priority) != EOF) {
+        if (strcmp(tempComplaint.id, complaintId) == 0) {
+            found = 1;
+            printf("╔══════════════════════════════════════════════════════════════╗\n");
+            printf("║            ✔ Traitement de la plainte %s                      ║\n", complaintId);
+            printf("╚══════════════════════════════════════════════════════════════╝\n");
+
+            printf("Statut actuel: %s\n", tempComplaint.status);
+            printf("Nouveau statut (En cours/Résolue/Rejetée): ");
+            scanf(" %[^\n]s", tempComplaint.status);
+
+            printf("Ajouter des notes: ");
+            scanf(" %[^\n]", tempComplaint.notes);
+
+            
+            if (strstr(tempComplaint.description, "urgent") || strstr(tempComplaint.description, "danger")) {
+                strcpy(tempComplaint.priority, "Haute");
+            } else if (strstr(tempComplaint.description, "problème") || strstr(tempComplaint.description, "retard")) {
+                strcpy(tempComplaint.priority, "Moyenne");
+            } else {
+                strcpy(tempComplaint.priority, "Basse");
+            }
+        }
+        fprintf(tempFile, "%s;%s;%s;%s;%s;%s;%s;%s\n", 
+                tempComplaint.id, 
+                tempComplaint.username, 
+                tempComplaint.motif, 
+                tempComplaint.description, 
+                tempComplaint.category, 
+                tempComplaint.status, 
+                tempComplaint.date, 
+                tempComplaint.priority);
+    }
+
+    fclose(file);
+    fclose(tempFile);
+
+    if (found) {
+        remove("complaints.txt");
+        rename("temp_temp.txt", "complaints.txt");
+        printf("\n");
+        printf("╔══════════════════════════════════════════════════════════════╗\n");
+        printf("║           ✔ Plainte traitée avec succès !                    ║\n");
+        printf("╚══════════════════════════════════════════════════════════════╝\n");
+    } else {
+        printf("\n");
+        printf("╔══════════════════════════════════════════════════════════════╗\n");
+        printf("║         ⚠ Plainte avec ID %s non trouvée !                   \n", complaintId);
+        printf("╚══════════════════════════════════════════════════════════════╝\n");
+        remove("temp_temp.txt");
+    }
+}
+
+
+void generateStatistics()
+{
+    FILE *file = fopen("complaints.txt", "r");
+    if (file == NULL) {
+        printf("\n");
+        printf("╔══════════════════════════════════════════════════════════════╗\n");
+        printf("║         ⚠ Erreur d'ouverture du fichier des plaintes ⚠       ║\n");
+        printf("╚══════════════════════════════════════════════════════════════╝\n");
+        return;
+    }
+
+    Complaint tempComplaint;
+    int totalComplaints = 0;
+    int resolvedComplaints = 0;
+    double totalDays = 0.0;
+    int resolvedCount = 0;
+
+    while (fscanf(file, "%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^\n]\n", 
+                  tempComplaint.id, 
+                  tempComplaint.username, 
+                  tempComplaint.motif, 
+                  tempComplaint.description, 
+                  tempComplaint.category, 
+                  tempComplaint.status, 
+                  tempComplaint.date, 
+                  tempComplaint.priority) != EOF) {
+        totalComplaints++;
+        if (strcmp(tempComplaint.status, "Résolue") == 0) {
+            resolvedComplaints++;
+            
+
+            
+            char *solvedDateStr = strstr(tempComplaint.notes, "le ");
+            if (solvedDateStr != NULL) {
+                struct tm submitted, solved;
+                double diff;
+
+                
+                sscanf(tempComplaint.date, "%d-%d-%d", &submitted.tm_year, &submitted.tm_mon, &submitted.tm_mday);
+                submitted.tm_year -= 1900; 
+                submitted.tm_mon -= 1;
+                submitted.tm_hour = 0;
+                submitted.tm_min = 0;
+                submitted.tm_sec = 0;
+                submitted.tm_isdst = -1;
+
+                
+                sscanf(solvedDateStr + 3, "%d-%d-%d", &solved.tm_year, &solved.tm_mon, &solved.tm_mday);
+                solved.tm_year -= 1900;
+                solved.tm_mon -= 1;
+                solved.tm_hour = 0;
+                solved.tm_min = 0;
+                solved.tm_sec = 0;
+                solved.tm_isdst = -1;
+
+                time_t submitted_time = mktime(&submitted);
+                time_t solved_time = mktime(&solved);
+
+                if (submitted_time != -1 && solved_time != -1) {
+                    diff = difftime(solved_time, submitted_time) / (60 * 60 * 24); 
+                    totalDays += diff;
+                    resolvedCount++;
+                }
+            }
+        }
+    }
+
+    fclose(file);
+
+    printf("\n");
+    printf("╔══════════════════════════════════════════════════════════════╗\n");
+    printf("║             ✦ Statistiques des Plaintes ✦                    ║\n");
+    printf("╠══════════════════════════════════════════════════════════════╣\n");
+    printf("║ Nombre total de plaintes : %d\n", totalComplaints);
+    printf("║ Nombre de plaintes résolues : %d\n", resolvedComplaints);
+
+    if (resolvedCount > 0) {
+        double average = totalDays / resolvedCount;
+        printf("║ Temps moyen de traitement des plaintes : %.2lf jours\n", average);
+    } else {
+        printf("║ Aucune plainte résolue pour calculer le temps moyen.\n");
+    }
+    printf("╚══════════════════════════════════════════════════════════════╝\n");
+}
+
+void generateDailyReport()
+{
+    FILE *file = fopen("complaints.txt", "r");
+    if (file == NULL) {
+        printf("\n");
+        printf("╔══════════════════════════════════════════════════════════════╗\n");
+        printf("║         ⚠ Erreur d'ouverture du fichier des plaintes ⚠       ║\n");
+        printf("╚══════════════════════════════════════════════════════════════╝\n");
+        return;
+    }
+
+    Complaint tempComplaint;
+    FILE *report = fopen("daily_report.txt", "w");
+    if (report == NULL) {
+        printf("\n");
+        printf("╔══════════════════════════════════════════════════════════════╗\n");
+        printf("║            ⚠ Erreur de création du rapport quotidien ⚠       ║\n");
+        printf("╚══════════════════════════════════════════════════════════════╝\n");
+        fclose(file);
+        return;
+    }
+
+    
+    time_t t = time(NULL);
+    struct tm tm = *localtime(&t);
+    char today[20];
+    sprintf(today, "%04d-%02d-%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
+
+    fprintf(report, "╔══════════════════════════════════════════════════════════════╗\n");
+    fprintf(report, "║                📅 Rapport Quotidien - %s 📅                  ║\n", today);
+    fprintf(report, "╚══════════════════════════════════════════════════════════════╝\n\n");
+    fprintf(report, "Plainte(s) Nouvelle(s) :\n");
+    fprintf(report, "%-10s %-15s %-15s %-20s %-10s %-15s %-12s %-10s\n", 
+            "ID", "Username", "Motif", "Description", "Category", "Status", "Date", "Priority");
+    fprintf(report, "----------------------------------------------------------------------------------------------------------\n");
+
+    while (fscanf(file, "%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^\n]\n", 
+                  tempComplaint.id, 
+                  tempComplaint.username, 
+                  tempComplaint.motif, 
+                  tempComplaint.description, 
+                  tempComplaint.category, 
+                  tempComplaint.status, 
+                  tempComplaint.date, 
+                  tempComplaint.priority) != EOF) {
+        if (strcmp(tempComplaint.date, today) == 0) {
+            fprintf(report, "%-10s %-15s %-15s %-20s %-10s %-15s %-12s %-10s\n", 
+                    tempComplaint.id, 
+                    tempComplaint.username, 
+                    tempComplaint.motif, 
+                    tempComplaint.description, 
+                    tempComplaint.category, 
+                    tempComplaint.status, 
+                    tempComplaint.date, 
+                    tempComplaint.priority);
+        }
+    }
+
+    
+    rewind(file);
+    fprintf(report, "\nPlainte(s) Résolue(s) Aujourd'hui :\n");
+    fprintf(report, "%-10s %-15s %-15s\n", "ID", "Username", "Motif");
+    fprintf(report, "-------------------------------------\n");
+
+    while (fscanf(file, "%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^\n]\n", 
+                  tempComplaint.id, 
+                  tempComplaint.username, 
+                  tempComplaint.motif, 
+                  tempComplaint.description, 
+                  tempComplaint.category, 
+                  tempComplaint.status, 
+                  tempComplaint.date, 
+                  tempComplaint.priority) != EOF) {
+        if (strcmp(tempComplaint.status, "Résolue") == 0) {
+            
+            char *solvedDateStr = strstr(tempComplaint.notes, "le ");
+            if (solvedDateStr != NULL) {
+                char solvedDate[20];
+                sscanf(solvedDateStr + 3, "%s", solvedDate);
+                if (strcmp(solvedDate, today) == 0) {
+                    fprintf(report, "%-10s %-15s %-15s\n", 
+                            tempComplaint.id, 
+                            tempComplaint.username, 
+                            tempComplaint.motif);
+                }
+            }
+        }
+    }
+
+    fclose(file);
+    fclose(report);
+
+    printf("\n");
+    printf("╔═════════════════════════════════════════════════════════════════════════════╗\n");
+    printf("║       ✦ Rapport quotidien généré avec succès dans 'daily_report.txt' ✦      ║\n");
+    printf("╚═════════════════════════════════════════════════════════════════════════════╝\n");
+}
+
+
+void menu()
+{
     int choice;
     char currentRole[ROLE_SIZE] = "";
+    char currentUsername[MAX_USERNAME] = ""; 
 
     do {
-        printf("\n=== Menu ===\n");
-        printf("1. Inscription\n");
-        printf("2. Connexion\n");
-        printf("3. Quitter\n");
-        printf("Choisissez une option : ");
+        printf("\n");
+        printf("╔══════════════════════════════════════════════════╗\n");
+        printf("║               ☆☆☆  BIENVENUE  ☆☆☆                ║\n");
+        printf("╠══════════════════════════════════════════════════╣\n");
+        printf("║ 1. ✦ Inscription                                 ║\n");
+        printf("║ 2. ✦ Connexion                                   ║\n");
+        printf("║ 3. ✦ Quitter                                     ║\n");
+        printf("╠══════════════════════════════════════════════════╣\n");
+        printf("║ Veuillez choisir une option :                    ║\n");
+        printf("╚══════════════════════════════════════════════════╝\n");
         scanf("%d", &choice);
 
         switch (choice) {
@@ -407,28 +1193,142 @@ int main() {
                 break;
             case 2:
                 if (signIn(currentRole)) {
+                    
+                    FILE *file = fopen("users.txt", "r");
+                    if (file != NULL) {
+                        User tempUser;
+                        char tempPasswd[MAX_PASSSWD];
+                        while (fscanf(file, "%s %s %s %ld %d", tempUser.username, tempPasswd, tempUser.role, &tempUser.lock_time, &tempUser.attempts) != EOF) {
+                            if (strcmp(tempUser.role, currentRole) == 0 && strcmp(tempUser.role, "Administrateur") == 0) {
+                                strcpy(currentUsername, tempUser.username);
+                                break;
+                            }
+                        }
+                        fclose(file);
+                    }
+
                     if (strcmp(currentRole, "Administrateur") == 0) {
                         manageRoles(currentRole);
                         
                     } else if (strcmp(currentRole, "Agent") == 0) {
                         
-                        printf("Fonctionnalités de gestion des réclamations pour Agent.\n");
-                        
+                        printf("\n");
+                        printf("╔═══════════════════════════════════════════════════════════╗\n");
+                        printf("║        ✦✦✦  Gestion des Plaintes pour Agent  ✦✦✦          ║\n");
+                        printf("╚═══════════════════════════════════════════════════════════╝\n");
+                        int agentChoice;
+                        do {
+                            printf("\n");
+                            printf("╔══════════════════════════════════════════════════╗\n");
+                            printf("║           ✦✦✦  GESTION DES PLAINTES  ✦✦✦         ║\n");
+                            printf("╠══════════════════════════════════════════════════╣\n");
+                            printf("║ 1. ➤ Ajouter une nouvelle plainte                ║\n");
+                            printf("║ 2. ➤ Modifier une plainte                        ║\n");
+                            printf("║ 3. ➤ Supprimer une plainte                       ║\n");
+                            printf("║ 4. ➤ Afficher la liste des plaintes              ║\n");
+                            printf("║ 5. ➤ Traiter une plainte                         ║\n");
+                            printf("║ 6. ➤ Retour au menu principal                    ║\n");
+                            printf("╠══════════════════════════════════════════════════╣\n");
+                            printf("║ Choisissez une option :                          ║\n");
+                            printf("╚══════════════════════════════════════════════════╝\n");
+                            scanf("%d", &agentChoice);
+                            printf("Choix sélectionné : %d\n", agentChoice); 
+
+                            switch (agentChoice) {
+                                case 1:
+                                    addComplaint("Agent"); 
+                                    break;
+                                case 2:
+                                    modifyComplaint();
+                                    break;
+                                case 3:
+                                    deleteComplaint();
+                                    break;
+                                case 4:
+                                    displayComplaints("Agent", ""); 
+                                    break;
+                                case 5:
+                                    processComplaint();
+                                    break;
+                                case 6:
+                                    printf("\n");
+                                    printf("╔══════════════════════════════════════╗\n");
+                                    printf("║      🔙  Retour au menu principal    ║\n");
+                                    printf("╚══════════════════════════════════════╝\n");
+                                    break;
+                                default:
+                                    printf("\n");
+                                    printf("╔══════════════════════════════════╗\n");
+                                    printf("║      ⚠️  Option invalide !        ║\n");
+                                    printf("╚══════════════════════════════════╝\n");
+                            }
+
+                        } while (agentChoice != 6);
                     } else if (strcmp(currentRole, "Client") == 0) {
-                        
-                        printf("Fonctionnalités de soumission et de suivi des réclamations pour Client.\n");
-                    
+                        printf("\n");
+                        printf("╔═══════════════════════════════════════════════════════════╗\n");
+                        printf("║        ✦✦✦  Gestion des Plainte pour Client  ✦✦✦          ║\n");
+                        printf("╚═══════════════════════════════════════════════════════════╝\n");
+                        int clientChoice;
+                        do {
+                            printf("\n");
+                            printf("╔══════════════════════════════════════════════════╗\n");
+                            printf("║            ✦✦✦  GESTION DES PLAINTES  ✦✦✦        ║\n");
+                            printf("╠══════════════════════════════════════════════════╣\n");
+                            printf("║ 1. ➤ Ajouter une nouvelle plainte                ║\n");
+                            printf("║ 2. ➤ Afficher mes plaintes                       ║\n");
+                            printf("║ 3. ➤ Quitter                                     ║\n");
+                            printf("╠══════════════════════════════════════════════════╣\n");
+                            printf("║ Choisissez une option :                          ║\n");
+                            printf("╚══════════════════════════════════════════════════╝\n");
+                            scanf("%d", &clientChoice);
+                            printf("Choix sélectionné : %d\n", clientChoice); 
+
+                            switch (clientChoice) {
+                                case 1:
+                                    addComplaint(currentUsername);
+                                    break;
+                                case 2:
+                                    displayComplaints("Client", currentUsername);
+                                    break;
+                                case 3:
+                                    printf("\n");
+                                    printf("╔══════════════════════════════════════╗\n");
+                                    printf("║      🔙  Retour au menu principal    ║\n");
+                                    printf("╚══════════════════════════════════════╝\n");
+                                    break;
+                                default:
+                                    printf("\n");
+                                    printf("╔══════════════════════════════════╗\n");
+                                    printf("║      ⚠️  Option invalide !        ║\n");
+                                    printf("╚══════════════════════════════════╝\n");
+                            }
+
+                        } while (clientChoice != 3);
                     }
                 }
                 break;
             case 3:
-                printf("Au revoir !\n");
+                printf("\n");
+                printf("╔══════════════════════════════╗\n");
+                printf("║        ✦ Au revoir ! ✦       ║\n");
+                printf("╚══════════════════════════════╝\n");
                 break;
             default:
-                printf("Option invalide.\n");
+                printf("\n");
+                printf("╔══════════════════════════════════╗\n");
+                printf("║      ⚠️  Option invalide !        ║\n");
+                printf("╚══════════════════════════════════╝\n");
+
         }
 
     } while (choice != 3);
 
+
+}
+
+int main()
+{
+    menu();
     return 0;
 }
