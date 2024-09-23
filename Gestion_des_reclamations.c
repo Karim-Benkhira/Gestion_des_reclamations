@@ -42,7 +42,7 @@ typedef struct
 /*=================== Functions =======> 1 =====================*/
 int PasswdValidOrInvalid(const char *passwd, const char *username);
 void signUp();
-int signIn(char *currentRole);
+int signIn(char *currentRole,char *currentUsername);
 void addUser();
 void manageRoles(const char *currentRole);
 void changeUserRole();
@@ -150,7 +150,7 @@ void signUp() {
 
 }
 
-int signIn(char *currentRole) {
+int signIn(char *currentRole,char *currentUsername) {
     char Passwd[MAX_PASSSWD];
     char UserName[MAX_USERNAME];
     User tempUser;
@@ -200,6 +200,7 @@ int signIn(char *currentRole) {
 
                 printf("Votre rôle est : %s\n", tempUser.role);
                 strcpy(currentRole, tempUser.role);
+                strcpy(currentUsername, tempUser.username);
                 tempUser.attempts = 0; 
                 loginSuccess = 1;
             } else {
@@ -610,7 +611,7 @@ void addComplaint(const char *username)
     printf("╚════════════════════════════════════════════════════════════╝\n");
     scanf(" %[^\n]s",newComplaint.category);
 
-    strcpy(newComplaint.status,"En cours ...");
+    strcpy(newComplaint.status,"En cours...");
     strcpy(newComplaint.notes,"");
 
     time_t t = time(NULL);
@@ -1192,7 +1193,7 @@ void menu()
                 signUp();
                 break;
             case 2:
-                if (signIn(currentRole)) {
+                if (signIn(currentRole,currentUsername)) {
                     
                     FILE *file = fopen("users.txt", "r");
                     if (file != NULL) {

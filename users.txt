@@ -1,1 +1,5 @@
 admin AdminPass123! Administrateur 0 0
+KarimBenkhira AmIh@02354! Client 0 0
+DennisRitchie Hgdh@jf256!J Client 0 0
+AgentsDavide HGds@!1234 Agent 0 0
+Mou_Davide Ghdj55@!1234 Client 0 0
