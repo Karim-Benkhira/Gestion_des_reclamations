@@ -637,9 +637,9 @@ void addComplaint(const char *username)
     fclose(file);
 
     printf("\n");
-    printf("╔════════════════════════════════════════════════════════════╗\n");
-    printf("║ ✦ Plainte ajoutée avec succès ! ID de la plainte : %s ✦     ║\n", newComplaint.id);
-    printf("╚════════════════════════════════════════════════════════════╝\n");
+    printf("╔════════════════════════════════════════════════════════════════════╗\n");
+    printf("║ ✦ Plainte ajoutée avec succès ! ID de la plainte : %s ✦     \n", newComplaint.id);
+    printf("╚════════════════════════════════════════════════════════════════════╝\n");
     
 }
 
@@ -984,7 +984,7 @@ void processComplaint()
     }
 }
 
-
+/*
 void generateStatistics()
 {
     FILE *file = fopen("complaints.txt", "r");
@@ -1068,7 +1068,79 @@ void generateStatistics()
         printf("║ Aucune plainte résolue pour calculer le temps moyen.\n");
     }
     printf("╚══════════════════════════════════════════════════════════════╝\n");
+}*/
+
+
+void generateStatistics()
+{
+    FILE *file = fopen("complaints.txt", "r");
+    if (file == NULL) {
+        printf("\n");
+        printf("╔══════════════════════════════════════════════════════════════╗\n");
+        printf("║         ⚠ Erreur d'ouverture du fichier des plaintes ⚠       ║\n");
+        printf("╚══════════════════════════════════════════════════════════════╝\n");
+        return;
+    }
+
+    Complaint tempComplaint;
+    int totalComplaints = 0;
+    int resolvedComplaints = 0;
+    double totalDays = 0.0;
+    int resolvedCount = 0;
+
+    while (fscanf(file, "%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^\n]\n", 
+                  tempComplaint.id, 
+                  tempComplaint.username, 
+                  tempComplaint.motif, 
+                  tempComplaint.description, 
+                  tempComplaint.category, 
+                  tempComplaint.status, 
+                  tempComplaint.date, 
+                  tempComplaint.priority) != EOF) {
+        totalComplaints++;
+        if (strcmp(tempComplaint.status, "Résolue") == 0) {
+            resolvedComplaints++;
+
+            
+            struct tm submitted;
+            sscanf(tempComplaint.date, "%d-%d-%d", &submitted.tm_year, &submitted.tm_mon, &submitted.tm_mday);
+            submitted.tm_year -= 1900; 
+            submitted.tm_mon -= 1;
+            submitted.tm_hour = 0;
+            submitted.tm_min = 0;
+            submitted.tm_sec = 0;
+
+            
+            time_t now = time(NULL);
+            struct tm *current = localtime(&now);
+
+            
+            time_t submitted_time = mktime(&submitted);
+            double diff = difftime(now, submitted_time) / (60 * 60 * 24); 
+            totalDays += diff;
+            resolvedCount++;
+        }
+    }
+
+    fclose(file);
+
+    printf("\n");
+    printf("╔══════════════════════════════════════════════════════════════╗\n");
+    printf("║             ✦ Statistiques des Plaintes ✦                    ║\n");
+    printf("╠══════════════════════════════════════════════════════════════╣\n");
+    printf("║ Nombre total de plaintes : %d\n", totalComplaints);
+    printf("║ Nombre de plaintes résolues : %d\n", resolvedComplaints);
+
+    if (resolvedCount > 0) {
+        double average = totalDays / resolvedCount;
+        printf("║ Temps moyen de traitement des plaintes : %.2lf jours\n", average);
+    } else {
+        printf("║ Aucune plainte résolue pour calculer le temps moyen.\n");
+    }
+    printf("╚══════════════════════════════════════════════════════════════╝\n");
 }
+
+
 
 void generateDailyReport()
 {
@@ -1098,13 +1170,14 @@ void generateDailyReport()
     char today[20];
     sprintf(today, "%04d-%02d-%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
 
-    fprintf(report, "╔══════════════════════════════════════════════════════════════╗\n");
-    fprintf(report, "║                📅 Rapport Quotidien - %s 📅                  ║\n", today);
-    fprintf(report, "╚══════════════════════════════════════════════════════════════╝\n\n");
+    fprintf(report, "╔═════════════════════════════════════════════════════════════════════╗\n");
+    fprintf(report, "║                📅 Rapport Quotidien - %s 📅                  \n", today);
+    fprintf(report, "╚═════════════════════════════════════════════════════════════════════╝\n\n");
     fprintf(report, "Plainte(s) Nouvelle(s) :\n");
+    fprintf(report, "═════════════════════════════════════════════════════════════════════\n");
     fprintf(report, "%-10s %-15s %-15s %-20s %-10s %-15s %-12s %-10s\n", 
             "ID", "Username", "Motif", "Description", "Category", "Status", "Date", "Priority");
-    fprintf(report, "----------------------------------------------------------------------------------------------------------\n");
+    fprintf(report, "═════════════════════════════════════════════════════════════════════\n");
 
     while (fscanf(file, "%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^\n]\n", 
                   tempComplaint.id, 
@@ -1131,9 +1204,10 @@ void generateDailyReport()
     
     rewind(file);
     fprintf(report, "\nPlainte(s) Résolue(s) Aujourd'hui :\n");
+    fprintf(report, "═════════════════════════════════════════════════════════════════════\n");
     fprintf(report, "%-10s %-15s %-15s\n", "ID", "Username", "Motif");
-    fprintf(report, "-------------------------------------\n");
-
+    fprintf(report, "═════════════════════════════════════════════════════════════════════\n");
+    
     while (fscanf(file, "%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^\n]\n", 
                   tempComplaint.id, 
                   tempComplaint.username, 
@@ -1142,8 +1216,9 @@ void generateDailyReport()
                   tempComplaint.category, 
                   tempComplaint.status, 
                   tempComplaint.date, 
-                  tempComplaint.priority) != EOF) {
-        if (strcmp(tempComplaint.status, "Résolue") == 0) {
+                  tempComplaint.priority) != EOF)
+                  {
+        /*if (strcmp(tempComplaint.status, "Résolue") == 0) {
             
             char *solvedDateStr = strstr(tempComplaint.notes, "le ");
             if (solvedDateStr != NULL) {
@@ -1156,7 +1231,14 @@ void generateDailyReport()
                             tempComplaint.motif);
                 }
             }
-        }
+        }*/
+
+                if (strcmp(tempComplaint.date, today) == 0) {
+                fprintf(report, "%-10s %-15s %-15s\n", 
+                tempComplaint.id, 
+                tempComplaint.username, 
+                tempComplaint.motif);
+                }
     }
 
     fclose(file);
