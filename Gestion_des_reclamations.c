@@ -61,6 +61,10 @@ void deleteComplaint();
 void processComplaint();
 void generateStatistics();
 void generateDailyReport();
+void searchUserOrComplaint();
+void searchUserByName(const char *username);
+void searchUserByRole(const char *role);
+void searchComplaintByCategory(const char *category);
 
 
 /*=================== Functions =======> 2 =====================*/
@@ -378,9 +382,9 @@ void changeUserRole()
             strcpy(tempUser.role, newRole);
             found = 1;
             printf("\n");
-            printf("╔══════════════════════════════════════════════════╗\n");
-            printf("║ ✅  Le rôle de %s a été changé en %s.            ║\n", usernameToChange, newRole);
-            printf("╚══════════════════════════════════════════════════╝\n");
+            printf("╔════════════════════════════════════════════════════════════╗\n");
+            printf("║ ✅  Le rôle de %s a été changé en %s.\n", usernameToChange, newRole);
+            printf("╚════════════════════════════════════════════════════════════╝\n");
         }
         fprintf(tempFile, "%s %s %s %ld %d\n", tempUser.username, tempPasswd, tempUser.role, tempUser.lock_time, tempUser.attempts);
     }
@@ -492,6 +496,126 @@ int hasPermission(const char *currentRole, const char *requiredRole) {
     return 0;
 }
 
+void searchUserOrComplaint() {
+    char searchTerm[50];
+    int searchOption;
+
+    printf("\n");
+    printf("╔════════════════════════════════════════════════════════════╗\n");
+    printf("║               ✦ Recherche d'un utilisateur ou plainte ✦    ║\n");
+    printf("╠════════════════════════════════════════════════════════════╣\n");
+    printf("║ 1. ➤ Rechercher par nom d'utilisateur                      ║\n");
+    printf("║ 2. ➤ Rechercher par rôle d'utilisateur                     ║\n");
+    printf("║ 3. ➤ Rechercher par catégorie de plainte                   ║\n");
+    printf("╚════════════════════════════════════════════════════════════╝\n");
+    scanf("%d", &searchOption);
+
+    printf("\n");
+    printf("Entrez le terme de recherche : ");
+    scanf("%s", searchTerm);
+
+    if (searchOption == 1) {
+        
+        searchUserByName(searchTerm);
+    } else if (searchOption == 2) {
+        
+        searchUserByRole(searchTerm);
+    } else if (searchOption == 3) {
+        
+        searchComplaintByCategory(searchTerm);
+    } else {
+        printf("Option invalide.\n");
+    }
+}
+
+void searchUserByName(const char *username) {
+    FILE *file = fopen("users.txt", "r");
+    if (file == NULL) {
+        printf("Erreur d'ouverture du fichier des utilisateurs.\n");
+        return;
+    }
+
+    char tempUserName[MAX_USERNAME];
+    char tempPasswd[MAX_PASSSWD];
+    char tempRole[ROLE_SIZE];
+    long lock_time;
+    int attempts;
+
+    int found = 0;
+    while (fscanf(file, "%s %s %s %ld %d", tempUserName, tempPasswd, tempRole, &lock_time, &attempts) != EOF) {
+        if (strcmp(username, tempUserName) == 0) {
+            printf("\nUtilisateur trouvé : %s, Rôle : %s\n", tempUserName, tempRole);
+            found = 1;
+            break;
+        }
+    }
+
+    if (!found) {
+        printf("Utilisateur non trouvé.\n");
+    }
+
+    fclose(file);
+}
+
+void searchUserByRole(const char *role) {
+    FILE *file = fopen("users.txt", "r");
+    if (file == NULL) {
+        printf("Erreur d'ouverture du fichier des utilisateurs.\n");
+        return;
+    }
+
+    char tempUserName[MAX_USERNAME];
+    char tempPasswd[MAX_PASSSWD];
+    char tempRole[ROLE_SIZE];
+    long lock_time;
+    int attempts;
+
+    int found = 0;
+    printf("Utilisateurs avec le rôle %s :\n", role);
+    while (fscanf(file, "%s %s %s %ld %d", tempUserName, tempPasswd, tempRole, &lock_time, &attempts) != EOF) {
+        if (strcmp(role, tempRole) == 0) {
+            printf("Utilisateur : %s\n", tempUserName);
+            found = 1;
+        }
+    }
+
+    if (!found) {
+        printf("Aucun utilisateur trouvé avec ce rôle.\n");
+    }
+
+    fclose(file);
+}
+
+void searchComplaintByCategory(const char *category) {
+    FILE *file = fopen("complaints.txt", "r");
+    if (file == NULL) {
+        printf("Erreur d'ouverture du fichier des plaintes.\n");
+        return;
+    }
+
+    Complaint tempComplaint;
+
+    int found = 0;
+    printf("Plaintes dans la catégorie %s :\n", category);
+    while (fscanf(file, "%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^\n]\n",
+                  tempComplaint.id, tempComplaint.username, tempComplaint.motif,
+                  tempComplaint.description, tempComplaint.category, tempComplaint.status,
+                  tempComplaint.date, tempComplaint.priority) != EOF) {
+        if (strcmp(category, tempComplaint.category) == 0) {
+            printf("Plainte ID: %s, Utilisateur: %s, Motif: %s\n",
+                   tempComplaint.id, tempComplaint.username, tempComplaint.motif);
+            found = 1;
+        }
+    }
+
+    if (!found) {
+        printf("Aucune plainte trouvée dans cette catégorie.\n");
+    }
+
+    fclose(file);
+}
+
+
 void manageRoles(const char *currentRole) {
     if (strcmp(currentRole, "Administrateur") != 0) {
         printf("Vous n'avez pas les droits pour gérer les utilisateurs.\n");
@@ -515,7 +639,8 @@ void manageRoles(const char *currentRole) {
         printf("║ 9.  ➤ Traiter une plainte                                       ║\n");
         printf("║ 10. ➤ Générer les statistiques                                  ║\n");
         printf("║ 11. ➤ Générer un rapport quotidien                              ║\n");
-        printf("║ 12. ➤ Retour au menu principal                                  ║\n");
+        printf("║ 12. ➤ Rechercher un utilisateur ou une plainte                  ║\n");
+        printf("║ 13. ➤ Retour au menu principal                                  ║\n");
         printf("╠═════════════════════════════════════════════════════════════════╣\n");
         printf("║ Choisissez une option :                                         ║\n");
         printf("╚═════════════════════════════════════════════════════════════════╝\n");
@@ -557,6 +682,8 @@ void manageRoles(const char *currentRole) {
                 generateDailyReport();
                 break;
             case 12:
+                searchUserOrComplaint();
+            case 13:
                 printf("\n");
                 printf("╔══════════════════════════════════════╗\n");
                 printf("║      🔙  Retour au menu principal    ║\n");
@@ -569,7 +696,7 @@ void manageRoles(const char *currentRole) {
                 printf("╚══════════════════════════════════╝\n");
         }
 
-    } while (choice != 12);
+    } while (choice != 13);
 }
 
 
