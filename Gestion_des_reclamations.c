@@ -37,9 +37,9 @@ typedef struct
     char priority[10];
 }Complaint;
 
-/*====================== 2 =====================*/
 
-/*=================== Functions =======> 1 =====================*/
+
+
 int PasswdValidOrInvalid(const char *passwd, const char *username);
 void signUp();
 int signIn(char *currentRole,char *currentUsername);
@@ -436,9 +436,9 @@ void deleteUser() {
         } else {
             found = 1;
             printf("\n");
-            printf("╔══════════════════════════════════════════════════╗\n");
-            printf("║ ✅  Utilisateur %s supprimé avec succès.         ║\n", usernameToDelete);
-            printf("╚══════════════════════════════════════════════════╝\n");
+            printf("╔═══════════════════════════════════════════════════════╗\n");
+            printf("║ ✅  Utilisateur %s supprimé avec succès.  \n", usernameToDelete);
+            printf("╚═══════════════════════════════════════════════════════╝\n");
         }
     }
 
@@ -449,7 +449,7 @@ void deleteUser() {
     {
         printf("\n");
         printf("╔══════════════════════════════════════════════════╗\n");
-        printf("║ ⚠️  Utilisateur %s non trouvé.                    ║\n", usernameToDelete);
+        printf("║ ⚠️  Utilisateur %s non trouvé.    \n", usernameToDelete);
         printf("╚══════════════════════════════════════════════════╝\n");
         remove("temp.txt");
     } else {
