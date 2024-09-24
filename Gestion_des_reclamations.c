@@ -658,12 +658,12 @@ void displayComplaints(const char *currentRole, const char *username)
     Complaint tempComplaint;
 
     printf("\n");
-    printf("╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗\n");
-    printf("║                                                   ✦ Liste des Plainte ✦                                                                       ║\n");
-    printf("╠═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣\n");
-    printf("║ %-10s %-15s %-15s %-40s %-15s %-15s %-12s %-10s   ║\n", 
+    printf("╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗\n");
+    printf("║                                                                ✦ Liste des Plainte ✦                                                                              ║\n");
+    printf("╠═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣\n");
+    printf("║ %-10s %-15s %-15s %-40s %-20s %-20s %-20s %-15s║\n", 
            "ID", "Username", "Motif", "Description", "Category", "Status", "Date", "Priority");
-    printf("╠═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣\n");
+    printf("╠═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣\n");
 
     
 
@@ -680,7 +680,7 @@ void displayComplaints(const char *currentRole, const char *username)
                     if (strcmp(currentRole, "Administrateur") == 0 || strcmp(currentRole, "Agent") == 0 || 
                         (strcmp(currentRole, "Client") == 0 && strcmp(tempComplaint.username, username) == 0))
                         {
-                            printf("║ %-10s %-15s %-15s %-40s %-16s %-16s %-14s %-10s║\n", 
+                            printf("║ %-10s %-15s %-15s %-40s %-20s %-20s %-20s %-15s║\n", 
                                 tempComplaint.id, 
                                 tempComplaint.username, 
                                 tempComplaint.motif, 
@@ -691,7 +691,7 @@ void displayComplaints(const char *currentRole, const char *username)
                                 tempComplaint.priority);
                         }
                   }
-    printf("╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝\n");
+    printf("╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝\n");
     fclose(file);
 
 }
@@ -984,92 +984,6 @@ void processComplaint()
     }
 }
 
-/*
-void generateStatistics()
-{
-    FILE *file = fopen("complaints.txt", "r");
-    if (file == NULL) {
-        printf("\n");
-        printf("╔══════════════════════════════════════════════════════════════╗\n");
-        printf("║         ⚠ Erreur d'ouverture du fichier des plaintes ⚠       ║\n");
-        printf("╚══════════════════════════════════════════════════════════════╝\n");
-        return;
-    }
-
-    Complaint tempComplaint;
-    int totalComplaints = 0;
-    int resolvedComplaints = 0;
-    double totalDays = 0.0;
-    int resolvedCount = 0;
-
-    while (fscanf(file, "%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^\n]\n", 
-                  tempComplaint.id, 
-                  tempComplaint.username, 
-                  tempComplaint.motif, 
-                  tempComplaint.description, 
-                  tempComplaint.category, 
-                  tempComplaint.status, 
-                  tempComplaint.date, 
-                  tempComplaint.priority) != EOF) {
-        totalComplaints++;
-        if (strcmp(tempComplaint.status, "Résolue") == 0) {
-            resolvedComplaints++;
-            
-
-            
-            char *solvedDateStr = strstr(tempComplaint.notes, "le ");
-            if (solvedDateStr != NULL) {
-                struct tm submitted, solved;
-                double diff;
-
-                
-                sscanf(tempComplaint.date, "%d-%d-%d", &submitted.tm_year, &submitted.tm_mon, &submitted.tm_mday);
-                submitted.tm_year -= 1900; 
-                submitted.tm_mon -= 1;
-                submitted.tm_hour = 0;
-                submitted.tm_min = 0;
-                submitted.tm_sec = 0;
-                submitted.tm_isdst = -1;
-
-                
-                sscanf(solvedDateStr + 3, "%d-%d-%d", &solved.tm_year, &solved.tm_mon, &solved.tm_mday);
-                solved.tm_year -= 1900;
-                solved.tm_mon -= 1;
-                solved.tm_hour = 0;
-                solved.tm_min = 0;
-                solved.tm_sec = 0;
-                solved.tm_isdst = -1;
-
-                time_t submitted_time = mktime(&submitted);
-                time_t solved_time = mktime(&solved);
-
-                if (submitted_time != -1 && solved_time != -1) {
-                    diff = difftime(solved_time, submitted_time) / (60 * 60 * 24); 
-                    totalDays += diff;
-                    resolvedCount++;
-                }
-            }
-        }
-    }
-
-    fclose(file);
-
-    printf("\n");
-    printf("╔══════════════════════════════════════════════════════════════╗\n");
-    printf("║             ✦ Statistiques des Plaintes ✦                    ║\n");
-    printf("╠══════════════════════════════════════════════════════════════╣\n");
-    printf("║ Nombre total de plaintes : %d\n", totalComplaints);
-    printf("║ Nombre de plaintes résolues : %d\n", resolvedComplaints);
-
-    if (resolvedCount > 0) {
-        double average = totalDays / resolvedCount;
-        printf("║ Temps moyen de traitement des plaintes : %.2lf jours\n", average);
-    } else {
-        printf("║ Aucune plainte résolue pour calculer le temps moyen.\n");
-    }
-    printf("╚══════════════════════════════════════════════════════════════╝\n");
-}*/
-
 
 void generateStatistics()
 {
@@ -1174,10 +1088,10 @@ void generateDailyReport()
     fprintf(report, "║                📅 Rapport Quotidien - %s 📅                  \n", today);
     fprintf(report, "╚═════════════════════════════════════════════════════════════════════╝\n\n");
     fprintf(report, "Plainte(s) Nouvelle(s) :\n");
-    fprintf(report, "═════════════════════════════════════════════════════════════════════\n");
+    fprintf(report, "═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════\n");
     fprintf(report, "%-10s %-15s %-15s %-20s %-10s %-15s %-12s %-10s\n", 
             "ID", "Username", "Motif", "Description", "Category", "Status", "Date", "Priority");
-    fprintf(report, "═════════════════════════════════════════════════════════════════════\n");
+    fprintf(report, "═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════\n");
 
     while (fscanf(file, "%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^\n]\n", 
                   tempComplaint.id, 
@@ -1204,9 +1118,9 @@ void generateDailyReport()
     
     rewind(file);
     fprintf(report, "\nPlainte(s) Résolue(s) Aujourd'hui :\n");
-    fprintf(report, "═════════════════════════════════════════════════════════════════════\n");
+    fprintf(report, "═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════\n");
     fprintf(report, "%-10s %-15s %-15s\n", "ID", "Username", "Motif");
-    fprintf(report, "═════════════════════════════════════════════════════════════════════\n");
+    fprintf(report, "═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════\n");
     
     while (fscanf(file, "%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^\n]\n", 
                   tempComplaint.id, 
@@ -1218,28 +1132,14 @@ void generateDailyReport()
                   tempComplaint.date, 
                   tempComplaint.priority) != EOF)
                   {
-        /*if (strcmp(tempComplaint.status, "Résolue") == 0) {
-            
-            char *solvedDateStr = strstr(tempComplaint.notes, "le ");
-            if (solvedDateStr != NULL) {
-                char solvedDate[20];
-                sscanf(solvedDateStr + 3, "%s", solvedDate);
-                if (strcmp(solvedDate, today) == 0) {
-                    fprintf(report, "%-10s %-15s %-15s\n", 
-                            tempComplaint.id, 
-                            tempComplaint.username, 
-                            tempComplaint.motif);
-                }
-            }
-        }*/
-
-                if (strcmp(tempComplaint.date, today) == 0) {
+                if (strcmp(tempComplaint.date, today) == 0 && strcmp(tempComplaint.status, "Résolue") == 0) {
                 fprintf(report, "%-10s %-15s %-15s\n", 
                 tempComplaint.id, 
                 tempComplaint.username, 
                 tempComplaint.motif);
                 }
     }
+    fprintf(report, "═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════\n");
 
     fclose(file);
     fclose(report);
